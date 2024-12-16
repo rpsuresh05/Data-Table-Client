@@ -15,6 +15,7 @@ import {
   getTaskStatusCounts,
 } from "./_lib/queries"
 import { searchParamsCache } from "./_lib/validations"
+import { TestTable } from "./TestTable"
 
 interface IndexPageProps {
   searchParams: Promise<SearchParams>
@@ -57,7 +58,8 @@ export default async function IndexPage(props: IndexPageProps) {
             />
           }
         >
-          <TasksTable promises={promises} />
+          {/* <TasksTable promises={promises} /> */}
+          <TestTable />
         </React.Suspense>
       </FeatureFlagsProvider>
     </Shell>
