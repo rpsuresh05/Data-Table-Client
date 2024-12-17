@@ -1,8 +1,8 @@
 "use client"
 
-import { SelectIcon } from "@radix-ui/react-select"
+import { SelectIcon, SelectItemIndicator } from "@radix-ui/react-select"
 import { type Column } from "@tanstack/react-table"
-import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from "lucide-react"
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, EyeOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -39,7 +39,7 @@ export function DataTableColumnHeader<TData, TValue>({
             ? descValue
             : column.getIsSorted() === "asc"
               ? ascValue
-              : undefined
+              : "undefined"
         }
         onValueChange={(value) => {
           if (value === ascValue) column.toggleSorting(false)
@@ -78,7 +78,7 @@ export function DataTableColumnHeader<TData, TValue>({
                     aria-hidden="true"
                   />
                   Asc
-                </span>
+                </span>          
               </SelectItem>
               <SelectItem value={descValue}>
                 <span className="flex items-center">

@@ -68,26 +68,36 @@ import {
 interface DataTableFilterListProps<TData> {
   table: Table<TData>
   filterFields: DataTableAdvancedFilterField<TData>[]
+  setColumnFilters: (updater: any) => void
   debounceMs: number
   shallow?: boolean
+}
+
+interface ColumnFilter {
+  id: string;
+  value: Array<{rowId: string, operator: string, value: string}>;
 }
 
 export function DataTableFilterList<TData>({
   table,
   filterFields,
+  setColumnFilters,
   debounceMs,
   shallow,
 }: DataTableFilterListProps<TData>) {
   const id = React.useId()
-  const [filters, setFilters] = useQueryState(
-    "filters",
-    getFiltersStateParser(table.getRowModel().rows[0]?.original)
-      .withDefault([])
-      .withOptions({
-        clearOnDefault: true,
-        shallow,
-      })
-  )
+  // const [filters, setFilters] = useQueryState(
+  //   "filters",
+  //   getFiltersStateParser(table.getRowModel().rows[0]?.original)
+  //     .withDefault([])
+  //     .withOptions({
+  //       clearOnDefault: true,
+  //       shallow,
+  //     })
+  // )
+  const setFilters = setColumnFilters;
+  const filters = table.getState().columnFilters;
+  console.log(filters, "filters");
 
   const [joinOperator, setJoinOperator] = useQueryState(
     "joinOperator",
@@ -103,50 +113,146 @@ export function DataTableFilterList<TData>({
     const filterField = filterFields[0]
 
     if (!filterField) return
+    updateFilter("", "", filterField.id, {
+      operator: getDefaultFilterOperator(filterField.type),
+      value: "",
+    }, "", "", "");
 
-    void setFilters([
-      ...filters,
-      {
-        id: filterField.id,
-        value: "",
-        type: filterField.type,
-        operator: getDefaultFilterOperator(filterField.type),
-        rowId: customAlphabet(
-          "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-          6
-        )(),
-      },
-    ])
+    // void setFilters([
+    //   ...filters,
+    //   {
+    //     id: filterField.id,
+    //     value: [
+    //       {
+    //         operator: getDefaultFilterOperator(filterField.type),
+    //         value: "",
+    //         rowId: customAlphabet(
+    //           "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    //           6
+    //         )()
+    //       }
+    //     ]
+    //   },
+    //   // {
+    //   //   id: filterField.id,
+    //   //   value: "",
+    //   //   type: filterField.type,
+    //   //   operator: getDefaultFilterOperator(filterField.type),
+    //   //   rowId: customAlphabet(
+    //   //     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    //   //     6
+    //   //   )(),
+    //   // },
+    // ])
   }
-
-  function updateFilter({
-    rowId,
-    field,
-    debounced = false,
-  }: {
-    rowId: string
-    field: Omit<Partial<Filter<TData>>, "rowId">
-    debounced?: boolean
-  }) {
-    const updateFunction = debounced ? debouncedSetFilters : setFilters
-    updateFunction((prevFilters) => {
-      const updatedFilters = prevFilters.map((filter) => {
-        if (filter.rowId === rowId) {
-          return { ...filter, ...field }
+  function updateFilter(removeColId: string, removeRowId: string , addColId: string , addValue: any, updateColId: string , updateRowId: string, updateValue: any){
+    let newFilters = filters.slice();
+    if(removeColId){
+      newFilters = newFilters.reduce<ColumnFilter[]>((res, curr) => {
+        if(curr.id === removeColId){
+          let tempValue = (curr.value as Array<{rowId: string, operator: string, value: string}>).slice();
+          tempValue = tempValue.filter((item) => {
+            if(item.rowId === removeRowId){
+              return false;
+            }
+            return true;
+          })
+          if(tempValue.length > 0){
+            res.push({
+              ...curr,
+              value: tempValue,
+            });
+          }
+        } else {
+          res.push(curr as ColumnFilter);
         }
-        return filter
+        return res;
+      }, [] as ColumnFilter[])
+    
+    }
+    if(updateColId){
+      newFilters = newFilters.map((item)=>{
+        if(item.id === updateColId){
+          let tempValue = (item.value as Array<{rowId: string}>).slice();
+          tempValue = tempValue.map((item)=>{
+            if(item.rowId === updateRowId){
+              return {
+                ...item,
+                ...updateValue,
+              }
+            }
+            return item;
+          })
+          return {
+            ...item,
+            value: tempValue,
+          }
+        }
+        return item;
       })
-      return updatedFilters
-    })
+    }
+    if(addColId){
+      const existingIdx = newFilters.findIndex((item)=>item.id === addColId);
+      if(existingIdx!==-1){
+        const existingFilter = newFilters[existingIdx];
+        if (existingFilter) {
+          existingFilter.value = [
+            ...(existingFilter.value as Array<{rowId: string}>),
+            {
+              ...addValue,
+              rowId: customAlphabet(
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+              6
+            )(),
+          }
+        ]
+      }
+    }else{
+      newFilters.push({
+        id: addColId,
+        value: [
+          {
+            ...addValue,
+            rowId: customAlphabet(
+              "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+              6
+            )(),
+          }
+        ]
+      })
+    }
+    }
+    console.log(newFilters, "filters newFilters");
+    setFilters(newFilters);
   }
+  // function updateFilter({
+  //   rowId,
+  //   field,
+  //   debounced = false,
+  // }: {
+  //   rowId: string
+  //   field: Omit<Partial<Filter<TData>>, "rowId">
+  //   debounced?: boolean
+  // }) {
+  //   const updateFunction = debounced ? debouncedSetFilters : setFilters
+  //   updateFunction((prevFilters) => {
+  //     const updatedFilters = prevFilters.map((filter) => {
+  //       if (filter.rowId === rowId) {
+  //         return { ...filter, ...field }
+  //       }
+  //       return filter
+  //     })
+  //     return updatedFilters
+  //   })
+  // }
 
-  function removeFilter(rowId: string) {
-    const updatedFilters = filters.filter((filter) => filter.rowId !== rowId)
-    void setFilters(updatedFilters)
-  }
+  // function removeFilter(rowId: string) {
+  //   const updatedFilters = filters.filter((filter) => filter.rowId !== rowId)
+  //   void setFilters(updatedFilters)
+  // }
 
   function moveFilter(activeIndex: number, overIndex: number) {
-    void setFilters((prevFilters) => {
+    void setFilters((prevFilters: any) => {
       const newFilters = [...prevFilters]
       const [removed] = newFilters.splice(activeIndex, 1)
       if (!removed) return prevFilters
@@ -193,11 +299,7 @@ export function DataTableFilterList<TData>({
               typeof filter.value === "string" ? filter.value : undefined
             }
             onChange={(event) =>
-              updateFilter({
-                rowId: filter.rowId,
-                field: { value: event.target.value },
-                debounced: true,
-              })
+              updateFilter("", "", "","", filter.id, filter.rowId as string, { value: event.target.value })
             }
           />
         )
@@ -247,7 +349,7 @@ export function DataTableFilterList<TData>({
                       value={option.value}
                       selected={filter.value === option.value}
                       onSelect={(value) => {
-                        updateFilter({ rowId: filter.rowId, field: { value } })
+                        updateFilter("", "", "","", filter.id, filter.rowId as string, { value })
                         setTimeout(() => {
                           document.getElementById(inputId)?.click()
                         }, 0)
@@ -353,10 +455,7 @@ export function DataTableFilterList<TData>({
                         const newValue = currentValue.includes(value)
                           ? currentValue.filter((v) => v !== value)
                           : [...currentValue, value]
-                        updateFilter({
-                          rowId: filter.rowId,
-                          field: { value: newValue },
-                        })
+                        updateFilter("", "", "","", filter.id, filter.rowId as string, { value: newValue })
                       }}
                     >
                       {option.icon && (
@@ -435,17 +534,13 @@ export function DataTableFilterList<TData>({
                         }
                   }
                   onSelect={(date) => {
-                    updateFilter({
-                      rowId: filter.rowId,
-                      field: {
-                        value: date
-                          ? [
-                              date.from?.toISOString() ?? "",
-                              date.to?.toISOString() ?? "",
-                            ]
-                          : [],
-                      },
-                    })
+                    updateFilter("", "", "","", filter.id, filter.rowId as string, { value: date
+                      ? [
+                          date.from?.toISOString() ?? "",
+                          date.to?.toISOString() ?? "",
+                        ]
+                      : []})
+
                   }}
                   initialFocus
                   numberOfMonths={1}
@@ -457,10 +552,7 @@ export function DataTableFilterList<TData>({
                   aria-label={`Select ${filterField.label} date`}
                   selected={dateValue[0] ? new Date(dateValue[0]) : undefined}
                   onSelect={(date) => {
-                    updateFilter({
-                      rowId: filter.rowId,
-                      field: { value: date?.toISOString() ?? "" },
-                    })
+                    updateFilter("", "", "","", filter.id, filter.rowId as string, { value: date?.toISOString() ?? "" })
 
                     setTimeout(() => {
                       document.getElementById(inputId)?.click()
@@ -479,7 +571,7 @@ export function DataTableFilterList<TData>({
           <Select
             value={filter.value}
             onValueChange={(value) =>
-              updateFilter({ rowId: filter.rowId, field: { value } })
+              updateFilter("", "", "","", filter.id, filter.rowId as string, { value })
             }
           >
             <SelectTrigger
@@ -501,10 +593,23 @@ export function DataTableFilterList<TData>({
         return null
     }
   }
+  const destructuredFilters: Array<{ id: string } & Record<string, unknown>> = [];
+  filters.forEach((item: ColumnFilter) => {
+    const tempId = item.id;
+    if (Array.isArray(item.value)) {
+      item.value.forEach((val: Record<string, unknown>) => {
+        destructuredFilters.push({
+          id: tempId,
+          ...val
+        })
+      })
+    }
+  })
+  console.log(destructuredFilters, "filters destructuredFilters");
 
   return (
     <Sortable
-      value={filters.map((item) => ({ id: item.rowId }))}
+      value={destructuredFilters.map((item) => ({ id: item.rowId }))}
       onMove={({ activeIndex, overIndex }) =>
         moveFilter(activeIndex, overIndex)
       }
@@ -560,7 +665,7 @@ export function DataTableFilterList<TData>({
             </div>
           )}
           <div className="flex max-h-40 flex-col gap-2 overflow-y-auto py-0.5 pr-1">
-            {filters.map((filter, index) => {
+            {destructuredFilters.map((filter, index) => {
               const filterId = `${id}-filter-${filter.rowId}`
               const joinOperatorListboxId = `${filterId}-join-operator-listbox`
               const fieldListboxId = `${filterId}-field-listbox`
@@ -569,7 +674,7 @@ export function DataTableFilterList<TData>({
               const inputId = `${filterId}-input`
 
               return (
-                <SortableItem key={filter.rowId} value={filter.rowId} asChild>
+                <SortableItem key={filter.rowId as string} value={filter.rowId as string} asChild>
                   <div className="flex items-center gap-2">
                     <div className="min-w-[4.5rem] text-center">
                       {index === 0 ? (
@@ -653,17 +758,7 @@ export function DataTableFilterList<TData>({
 
                                     if (!filterField) return
 
-                                    updateFilter({
-                                      rowId: filter.rowId,
-                                      field: {
-                                        id: value as StringKeyOf<TData>,
-                                        type: filterField.type,
-                                        operator: getDefaultFilterOperator(
-                                          filterField.type
-                                        ),
-                                        value: "",
-                                      },
-                                    })
+                                    updateFilter(filter.id, filter.rowId as string, value,  { rowId: filter.rowId, operator: filter.operator, value: filter.value}, "", "", "");
 
                                     document
                                       .getElementById(fieldTriggerId)
@@ -689,18 +784,9 @@ export function DataTableFilterList<TData>({
                       </PopoverContent>
                     </Popover>
                     <Select
-                      value={filter.operator}
+                      value={filter.operator as string}
                       onValueChange={(value: FilterOperator) =>
-                        updateFilter({
-                          rowId: filter.rowId,
-                          field: {
-                            operator: value,
-                            value:
-                              value === "isEmpty" || value === "isNotEmpty"
-                                ? ""
-                                : filter.value,
-                          },
-                        })
+                        updateFilter("", "", "", "", filter.id, filter.rowId as string, {  operator: value, value: filter.value})
                       }
                     >
                       <SelectTrigger
@@ -728,7 +814,7 @@ export function DataTableFilterList<TData>({
                       size="icon"
                       aria-label={`Remove filter ${index + 1}`}
                       className="size-8 shrink-0 rounded"
-                      onClick={() => removeFilter(filter.rowId)}
+                      onClick={() => updateFilter(filter.id, filter.rowId as string, "", "", "", "", "")}
                     >
                       <Trash2 className="size-3.5" aria-hidden="true" />
                     </Button>

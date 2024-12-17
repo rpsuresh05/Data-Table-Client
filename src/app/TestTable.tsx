@@ -9,10 +9,11 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table"
 import { DataTable } from "@/components/data-table/data-table"
-import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
+import { DataTableColumnHeader } from "@/components/data-table-client/data-table-column-header"
 import { DataTableAdvancedToolbar } from "@/components/data-table-client/data-table-advanced-toolbar"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
 import { TasksTableToolbarActions } from "./_components/tasks-table-toolbar-actions"
+import { DataTableAdvancedFilterField } from "@/types"
 
 interface TestData {
   id: string
@@ -40,6 +41,28 @@ const columns: ColumnDef<TestData>[] = [
       ),
   },
 ]
+const advancedFilterFields = [
+    {
+      id: "id",
+      label: "ID",
+      type: "number",
+    },
+    {
+      id: "name",
+      label: "Name",
+      type: "text",
+    },
+    {
+      id: "email",
+      label: "Email",
+      type: "text",
+    },
+    {
+      id: "createdAt",
+      label: "Created at",
+      type: "date",
+    },
+  ]
 
 const data: TestData[] = [
   {
@@ -198,7 +221,23 @@ const filterFns = {
 
 
 export function TestTable() {
+  const [columnFilters, setColumnFilters] = React.useState<{
+    id: string;
+    value: FilterValue[];
+  }[]>([])
+
+//   const handleFilterChange = React.useCallback((updater: any) => {
+//     const newFilters = typeof updater === 'function' 
+//       ? updater(columnFilters)
+//       : updater
+//     setColumnFilters(newFilters)
+//   }, [columnFilters])
+
   const table = useReactTable({
+    state: {
+      columnFilters,
+    },
+    // onColumnFiltersChange: handleFilterChange,
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -211,8 +250,8 @@ export function TestTable() {
     <DataTable table={table}>        
         <DataTableAdvancedToolbar
           table={table}
-        //   filterFields={advancedFilterFields}
-          filterFields={[]}
+          setColumnFilters={setColumnFilters}
+          filterFields={advancedFilterFields as DataTableAdvancedFilterField<TestData>[]}
           shallow={false}
         >
           {/* <TasksTableToolbarActions table={table} /> */}

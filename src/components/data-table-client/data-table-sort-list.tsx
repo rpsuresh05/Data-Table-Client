@@ -100,6 +100,7 @@ export function DataTableSortList<TData>({
           label: toSentenceCase(column.id),
           selected: false,
           toggleSorting: column.toggleSorting,
+          clearSorting: column.clearSorting,
         }))
         ,
     [sorting, table]
@@ -111,13 +112,14 @@ export function DataTableSortList<TData>({
     )
     if (!firstAvailableColumn) return
 
-    void setSorting([
-      ...sorting,
-      {
-        id: firstAvailableColumn.id as StringKeyOf<TData>,
-        desc: false,
-      },
-    ])
+    firstAvailableColumn.toggleSorting(false, true);
+    // void setSorting([
+    //   ...sorting,
+    //   {
+    //     id: firstAvailableColumn.id as StringKeyOf<TData>,
+    //     desc: false,
+    //   },
+    // ])
   }
 
   function updateSort({
@@ -129,22 +131,24 @@ export function DataTableSortList<TData>({
     field: Partial<ExtendedColumnSort<TData>>
     debounced?: boolean
   }) {
-    const updateFunction = debounced ? debouncedSetSorting : setSorting
+    table.setSorting(old => old.map(d => d.id === id ? { ...d, ...field } : d))
+    // const updateFunction = debounced ? debouncedSetSorting : setSorting
 
-    updateFunction((prevSorting) => {
-      if (!prevSorting) return prevSorting
+    // updateFunction((prevSorting) => {
+    //   if (!prevSorting) return prevSorting
 
-      const updatedSorting = prevSorting.map((sort) =>
-        sort.id === id ? { ...sort, ...field } : sort
-      )
-      return updatedSorting
-    })
+    //   const updatedSorting = prevSorting.map((sort) =>
+    //     sort.id === id ? { ...sort, ...field } : sort
+    //   )
+    //   return updatedSorting
+    // })
   }
 
   function removeSort(id: string) {
-    void setSorting((prevSorting) =>
-      prevSorting.filter((item) => item.id !== id)
-    )
+    table.setSorting(old => old.filter(d => d.id !== id))
+    // void setSorting((prevSorting) =>
+    //   prevSorting.filter((item) => item.id !== id)
+    // )
   }
 
   return (
@@ -259,7 +263,7 @@ export function DataTableSortList<TData>({
                                     value={column.id}
                                     onSelect={(value) => {
                                       const newFieldTriggerId = `${id}-sort-${value}-field-trigger`
-
+                                      console.log("sorting onValueChange 265", value);
                                       updateSort({
                                         id: sort.id,
                                         field: {
@@ -295,11 +299,12 @@ export function DataTableSortList<TData>({
                       </Popover>
                       <Select
                         value={sort.desc ? "desc" : "asc"}
-                        onValueChange={(value: SortDirection) =>
+                        onValueChange={(value: SortDirection) =>{
+                          console.log("sorting onValueChange 301", value);
                           updateSort({
                             id: sort.id,
-                            field: { id: sort.id, desc: value === "desc" },
-                          })
+                            field: { desc: value === "desc" },
+                          })}
                         }
                       >
                         <SelectTrigger
@@ -327,7 +332,7 @@ export function DataTableSortList<TData>({
                         size="icon"
                         aria-label={`Remove sort ${sort.id}`}
                         className="size-8 shrink-0 rounded"
-                        onClick={() => removeSort(sort.id)}
+                        onClick={() =>{ removeSort(sort.id)}}
                       >
                         <Trash2 className="size-3.5" aria-hidden="true" />
                       </Button>
@@ -358,7 +363,7 @@ export function DataTableSortList<TData>({
                 size="sm"
                 variant="outline"
                 className="rounded"
-                onClick={() => setSorting([])}
+                onClick={() => table.resetSorting()}
               >
                 Reset sorting
               </Button>
