@@ -1,6 +1,6 @@
 # [Shadcn Table](https://table.sadmn.com)
 
-This is a shadcn table with server-side sorting, filtering, and pagination. It is bootstrapped with `create-t3-app`.
+This is a shadcn table with client-side sorting, filtering, and pagination. It is bootstrapped with `create-t3-app`. Inspired from [TanStack Table](https://tanstack.com/table/latest) and [Shadcn Table](https://table.sadmn.com).
 
 [![Shadcn Table](./public/images/screenshot.png)](https://table.sadmn.com)
 
@@ -19,7 +19,7 @@ This is a shadcn table with server-side sorting, filtering, and pagination. It i
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team)
 - **Validation:** [Zod](https://zod.dev)
 
-## Features
+<!-- ## Features
 
 - [x] Server-side pagination, sorting, and filtering (via `useDataTable` hook)
 - [x] Customizable columns (`dataTable` and `columns` props)
@@ -110,6 +110,6 @@ Watch the codebase overview video on [YouTube](https://www.youtube.com/watch?v=B
 
 Consider subscribing to Kavin Desi Valli's [YouTube channel](https://www.youtube.com/@livecode247) for more videos.
 
-## How do I deploy this?
+## How do I deploy this? -->
 
-Follow the deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+<!-- Follow the deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information. -->
