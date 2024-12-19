@@ -222,7 +222,7 @@ export function DataTableFilterList<TData>({
       })
     }
     }
-    console.log(newFilters, "filters newFilters");
+    // console.log(newFilters, "filters newFilters");
     setFilters(newFilters);
   }
   // function updateFilter({
@@ -269,6 +269,7 @@ export function DataTableFilterList<TData>({
     inputId: string
   }) {
     const filterField = filterFields.find((f) => f.id === filter.id)
+    console.log(filterField, filter, "filters filterField");
 
     if (!filterField) return null
 
@@ -594,12 +595,17 @@ export function DataTableFilterList<TData>({
     }
   }
   const destructuredFilters: Array<{ id: string } & Record<string, unknown>> = [];
+  const filterMap = new Map<string, string>();
+  filterFields.forEach((field) => {
+    filterMap.set(field.id, field.type);
+  });
   filters.forEach((item: ColumnFilter) => {
     const tempId = item.id;
     if (Array.isArray(item.value)) {
       item.value.forEach((val: Record<string, unknown>) => {
         destructuredFilters.push({
           id: tempId,
+          type: filterMap.get(tempId),
           ...val
         })
       })

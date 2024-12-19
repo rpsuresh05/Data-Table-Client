@@ -55,6 +55,12 @@ export const dataTableConfig = {
     { label: "Is empty", value: "isEmpty" as const },
     { label: "Is not empty", value: "isNotEmpty" as const },
   ],
+  multiselectOperators: [
+    { label: "Contains", value: "has" as const }, //has items in array
+    { label: "Does not contain", value: "hasNot" as const }, //does not have items in array
+    { label: "Is empty", value: "isEmpty" as const },
+    { label: "Is not empty", value: "isNotEmpty" as const },
+  ],
   booleanOperators: [
     { label: "Is", value: "eq" as const },
     { label: "Is not", value: "ne" as const },
