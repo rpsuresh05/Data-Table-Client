@@ -98,7 +98,7 @@ export function DataTableFilterList<TData>({
   // )
   const setFilters = setColumnFilters
   const filters = table.getState().columnFilters
-  console.log(filters, "filters")
+  // console.log(filters, "filters")
 
   const [joinOperator, setJoinOperator] = useQueryState(
     "joinOperator",
@@ -648,7 +648,7 @@ export function DataTableFilterList<TData>({
               aria-controls={`${inputId}-listbox`}
               className="h-8 w-full rounded bg-transparent"
             >
-              <SelectValue placeholder={filter.value ? "True" : "False"} />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent id={`${inputId}-listbox`}>
               <SelectItem value="true">True</SelectItem>

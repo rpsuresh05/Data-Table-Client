@@ -4,6 +4,7 @@ import * as React from "react"
 import { DataTableAdvancedFilterField } from "@/types"
 import {
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -12,6 +13,7 @@ import {
 
 import { DataTableAdvancedToolbar } from "@/components/data-table-client/data-table-advanced-toolbar"
 import { DataTableColumnHeader } from "@/components/data-table-client/data-table-column-header"
+import { DataTablePinList } from "@/components/data-table-client/data-table-pin-list"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
 
@@ -22,22 +24,28 @@ const advancedFilter = <TData extends Record<string, any>>(
   columnId: string,
   filterValues: FilterValue[]
 ): boolean => {
-  console.log(filterValues, "LINE 377 filters")
+  // console.log(filterValues, row, columnId, "LINE 377 filters")
   const value = row.getValue(columnId)
+
   if (!filterValues?.length) return true
 
   // Handle empty/null checks first
   if (value === null || value === undefined) {
     return filterValues.some(
       (filter) =>
-        filter.type === "isEmpty" ||
-        (filter.type === "isNotEmpty" ? false : true)
+        filter.operator === "isEmpty" ||
+        (filter.operator === "isNotEmpty" ? false : true)
     )
   }
 
   return filterValues.every((filter) => {
-    console.log(filter, "LINE 390 filters")
-    switch (filter.type) {
+    if (
+      filter.value === "" ||
+      (Array.isArray(filter.value) && filter.value.length === 0)
+    )
+      return true
+
+    switch (filter.operator) {
       case "iLike":
         return String(value)
           .toLowerCase()
@@ -49,9 +57,6 @@ const advancedFilter = <TData extends Record<string, any>>(
           .includes(String(filter.value).toLowerCase())
 
       case "eq":
-        if (value instanceof Date) {
-          return new Date(value).getTime() === new Date(filter.value).getTime()
-        }
         if (typeof value === "boolean") {
           return value === (filter.value === "true")
         }
@@ -61,9 +66,6 @@ const advancedFilter = <TData extends Record<string, any>>(
         return value == filter.value
 
       case "ne":
-        if (value instanceof Date) {
-          return new Date(value).getTime() !== new Date(filter.value).getTime()
-        }
         if (typeof value === "boolean") {
           return value !== (filter.value === "true")
         }
@@ -73,41 +75,27 @@ const advancedFilter = <TData extends Record<string, any>>(
         return value != filter.value
 
       case "gt":
-        if (value instanceof Date) {
-          return new Date(value) > new Date(filter.value)
-        }
         return Number(value) > Number(filter.value)
 
       case "gte":
-        if (value instanceof Date) {
-          return new Date(value) >= new Date(filter.value)
-        }
         return Number(value) >= Number(filter.value)
 
       case "lt":
-        if (value instanceof Date) {
-          return new Date(value) < new Date(filter.value)
-        }
         return Number(value) < Number(filter.value)
 
       case "lte":
-        if (value instanceof Date) {
-          return new Date(value) <= new Date(filter.value)
-        }
         return Number(value) <= Number(filter.value)
 
       case "has":
         return (
-          Array.isArray(value) &&
           Array.isArray(filter.value) &&
-          filter.value.every((val) => value.includes(val))
+          filter.value.findIndex((val) => val === value) !== -1
         )
 
       case "hasNot":
         return (
-          Array.isArray(value) &&
           Array.isArray(filter.value) &&
-          !filter.value.some((val) => value.includes(val))
+          filter.value.findIndex((val) => val === value) === -1
         )
 
       case "isEmpty":
@@ -127,6 +115,19 @@ const advancedFilter = <TData extends Record<string, any>>(
           new Date(value) >= new Date(start) && new Date(value) <= new Date(end)
         )
       // }
+      case "date-eq":
+        return new Date(value).getTime() === new Date(filter.value).getTime()
+      case "date-ne":
+        return new Date(value).getTime() !== new Date(filter.value).getTime()
+      case "date-lt":
+        return new Date(value) < new Date(filter.value)
+      case "date-gt":
+        return new Date(value) > new Date(filter.value)
+      case "date-lte":
+        return new Date(value) <= new Date(filter.value)
+      case "date-gte":
+        return new Date(value) >= new Date(filter.value)
+
       // const [min, max] = String(filter.value).split(',').map(Number)
       // return Number(value) >= min && Number(value) <= max
 
@@ -168,36 +169,42 @@ const columns: ColumnDef<TestData>[] = [
   },
   {
     accessorKey: "email",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Email" />
     ),
   },
   {
     accessorKey: "age",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Age" />
     ),
   },
   {
     accessorKey: "birthDate",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="DOB" />
     ),
   },
   {
     accessorKey: "isActive",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Active" />
     ),
   },
   {
     accessorKey: "education",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Education" />
     ),
   },
   {
     accessorKey: "gender",
+    filterFn: "advanced",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Gender" />
     ),
@@ -228,6 +235,11 @@ const advancedFilterFields = [
     id: "age",
     label: "Age",
     type: "number",
+  },
+  {
+    id: "isActive",
+    label: "Active",
+    type: "boolean",
   },
   {
     id: "education",
@@ -266,8 +278,8 @@ const data: TestData[] = [
     id: "1",
     name: "John Doe",
     email: "john@example.com",
-    age: 25,
-    birthDate: "1999-03-15",
+    age: 1,
+    birthDate: "2024-03-15",
     isActive: true,
     education: "Masters",
     gender: "Male",
@@ -276,8 +288,8 @@ const data: TestData[] = [
     id: "2",
     name: "Jane Smith",
     email: "jane@example.com",
-    age: 32,
-    birthDate: "1992-07-21",
+    age: 1,
+    birthDate: "2024-07-21",
     isActive: false,
     education: "PHD",
     gender: "Female",
@@ -296,8 +308,8 @@ const data: TestData[] = [
     id: "4",
     name: "Mary Johnson",
     email: "mary@example.com",
-    age: 28,
-    birthDate: "1996-01-10",
+    age: 2,
+    birthDate: "2022-01-10",
     isActive: true,
     education: "Bachelors",
     gender: "Female",
@@ -485,7 +497,7 @@ const data: TestData[] = [
 ]
 
 type FilterValue = {
-  type:
+  operator:
     | "iLike"
     | "notILike"
     | "eq"
@@ -500,7 +512,13 @@ type FilterValue = {
     | "isEmpty"
     | "isNotEmpty"
     | "isBetween"
-  value: string | number
+    | "date-eq"
+    | "date-ne"
+    | "date-lt"
+    | "date-gt"
+    | "date-lte"
+    | "date-gte"
+  value: string | number | Date
 }
 
 const filterFns = {
@@ -515,45 +533,75 @@ export function TestTable() {
     }[]
   >([])
 
-  const handleFilterChange = React.useCallback(
-    (updater: any) => {
-      console.log(updater, "LINE 516 updater")
-      const newFilters =
-        typeof updater === "function" ? updater(columnFilters) : updater
-      setColumnFilters(newFilters)
-    },
-    [columnFilters]
+  // const handleFilterChange = React.useCallback(
+  //   (updater: any) => {
+  //     // console.log(updater, "LINE 516 updater")
+  //     const newFilters =
+  //       typeof updater === "function" ? updater(columnFilters) : updater
+  //     setColumnFilters(newFilters)
+  //   },
+  //   [columnFilters]
+  // )
+  // console.log("TABLE RENDERING b4")
+  // const table = useReactTable({
+  //   state: {
+  //     columnFilters,
+  //   },
+  //   // state: {
+  //   //   columnFilters: [
+  //   //     {
+  //   //       id: "name",
+  //   //       value: [
+  //   //         {
+  //   //           type: "iLike",
+  //   //           value: "John",
+  //   //         },
+  //   //       ],
+  //   //     },
+  //   //   ],
+  //   // },
+  //   // onColumnFiltersChange: handleFilterChange,
+  //   enableColumnFilters: true,
+  //   enableFilters: true,
+  //   data,
+  //   columns,
+  //   getCoreRowModel: getCoreRowModel(),
+  //   getPaginationRowModel: getPaginationRowModel(),
+  //   getSortedRowModel: getSortedRowModel(),
+  //   getFilteredRowModel: getFilteredRowModel(),
+  //   filterFns: {
+  //     advanced: advancedFilter,
+  //   },
+  // })
+  // console.log("TABLE RENDERING")
+
+  const tableConfig = React.useMemo(
+    () => ({
+      state: {
+        columnFilters,
+      },
+      enableColumnFilters: true,
+      enableFilters: true,
+      data,
+      columns,
+      getCoreRowModel: getCoreRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      filterFns: {
+        advanced: advancedFilter,
+      },
+    }),
+    [columnFilters] // Only depend on columnFilters
   )
 
-  const table = useReactTable({
-    state: {
-      columnFilters,
-    },
-    // state: {
-    //   columnFilters: [
-    //     {
-    //       id: "name",
-    //       value: [
-    //         {
-    //           type: "iLike",
-    //           value: "John",
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // },
-    onColumnFiltersChange: handleFilterChange,
-    enableColumnFilters: true,
-    enableFilters: true,
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    filterFns: {
-      advanced: advancedFilter,
-    },
-  })
+  console.log("TABLE RENDERING b4")
+  const table = useReactTable(tableConfig)
+  console.log("TABLE RENDERING")
+
+  React.useEffect(() => {
+    console.log("TABLE RENDERING in useEffect")
+  }, [table])
 
   return (
     <DataTable table={table}>
@@ -566,6 +614,7 @@ export function TestTable() {
         shallow={false}
       >
         {/* <TasksTableToolbarActions table={table} /> */}
+        <DataTablePinList table={table} />
       </DataTableAdvancedToolbar>
 
       {/* <DataTableToolbar table={table} 
