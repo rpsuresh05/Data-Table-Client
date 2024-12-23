@@ -24,11 +24,11 @@ interface DataTableViewOptionsProps<TData> {
   table: Table<TData>
 }
 
-export function DataTableViewOptions<TData>({
+function DataTableViewOptionsUnmemoized<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
   const triggerRef = React.useRef<HTMLButtonElement>(null)
-
+  console.log("view options rendering")
   return (
     <Popover modal>
       <PopoverTrigger asChild>
@@ -89,3 +89,5 @@ export function DataTableViewOptions<TData>({
     </Popover>
   )
 }
+
+export const DataTableViewOptions = React.memo(DataTableViewOptionsUnmemoized)

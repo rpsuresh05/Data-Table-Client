@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type {
+  ColumnType,
   DataTableAdvancedFilterField,
   Filter,
   FilterOperator,
@@ -74,15 +75,15 @@ interface DataTableFilterListProps<TData> {
 }
 
 interface ColumnFilter {
-  id: string;
-  value: Array<{rowId: string, operator: string, value: string}>;
+  id: string
+  value: Array<{ rowId: string; operator: string; value: string }>
 }
 
 export function DataTableFilterList<TData>({
   table,
   filterFields,
   setColumnFilters,
-  debounceMs,
+  debounceMs = 1000,
   shallow,
 }: DataTableFilterListProps<TData>) {
   const id = React.useId()
@@ -95,9 +96,9 @@ export function DataTableFilterList<TData>({
   //       shallow,
   //     })
   // )
-  const setFilters = setColumnFilters;
-  const filters = table.getState().columnFilters;
-  console.log(filters, "filters");
+  const setFilters = setColumnFilters
+  const filters = table.getState().columnFilters
+  console.log(filters, "filters")
 
   const [joinOperator, setJoinOperator] = useQueryState(
     "joinOperator",
@@ -107,16 +108,24 @@ export function DataTableFilterList<TData>({
     })
   )
 
-  const debouncedSetFilters = useDebouncedCallback(setFilters, debounceMs)
+  const debouncedSetFilters = useDebouncedCallback(updateFilter, debounceMs)
 
   function addFilter() {
     const filterField = filterFields[0]
 
     if (!filterField) return
-    updateFilter("", "", filterField.id, {
-      operator: getDefaultFilterOperator(filterField.type),
-      value: "",
-    }, "", "", "");
+    updateFilter(
+      "",
+      "",
+      filterField.id,
+      {
+        operator: getDefaultFilterOperator(filterField.type),
+        value: "",
+      },
+      "",
+      "",
+      ""
+    )
 
     // void setFilters([
     //   ...filters,
@@ -145,85 +154,98 @@ export function DataTableFilterList<TData>({
     //   // },
     // ])
   }
-  function updateFilter(removeColId: string, removeRowId: string , addColId: string , addValue: any, updateColId: string , updateRowId: string, updateValue: any){
-    let newFilters = filters.slice();
-    if(removeColId){
+  function updateFilter(
+    removeColId: string,
+    removeRowId: string,
+    addColId: string,
+    addValue: any,
+    updateColId: string,
+    updateRowId: string,
+    updateValue: any
+  ) {
+    let newFilters = filters.slice()
+    if (removeColId) {
       newFilters = newFilters.reduce<ColumnFilter[]>((res, curr) => {
-        if(curr.id === removeColId){
-          let tempValue = (curr.value as Array<{rowId: string, operator: string, value: string}>).slice();
+        if (curr.id === removeColId) {
+          let tempValue = (
+            curr.value as Array<{
+              rowId: string
+              operator: string
+              value: string
+            }>
+          ).slice()
           tempValue = tempValue.filter((item) => {
-            if(item.rowId === removeRowId){
-              return false;
+            if (item.rowId === removeRowId) {
+              return false
             }
-            return true;
+            return true
           })
-          if(tempValue.length > 0){
+          if (tempValue.length > 0) {
             res.push({
               ...curr,
               value: tempValue,
-            });
+            })
           }
         } else {
-          res.push(curr as ColumnFilter);
+          res.push(curr as ColumnFilter)
         }
-        return res;
+        return res
       }, [] as ColumnFilter[])
-    
     }
-    if(updateColId){
-      newFilters = newFilters.map((item)=>{
-        if(item.id === updateColId){
-          let tempValue = (item.value as Array<{rowId: string}>).slice();
-          tempValue = tempValue.map((item)=>{
-            if(item.rowId === updateRowId){
+    if (updateColId) {
+      newFilters = newFilters.map((item) => {
+        if (item.id === updateColId) {
+          let tempValue = (item.value as Array<{ rowId: string }>).slice()
+          tempValue = tempValue.map((item) => {
+            if (item.rowId === updateRowId) {
               return {
                 ...item,
                 ...updateValue,
               }
             }
-            return item;
+            return item
           })
           return {
             ...item,
             value: tempValue,
           }
         }
-        return item;
+        return item
       })
     }
-    if(addColId){
-      const existingIdx = newFilters.findIndex((item)=>item.id === addColId);
-      if(existingIdx!==-1){
-        const existingFilter = newFilters[existingIdx];
+    if (addColId) {
+      const existingIdx = newFilters.findIndex((item) => item.id === addColId)
+      if (existingIdx !== -1) {
+        const existingFilter = newFilters[existingIdx]
         if (existingFilter) {
           existingFilter.value = [
-            ...(existingFilter.value as Array<{rowId: string}>),
+            ...(existingFilter.value as Array<{ rowId: string }>),
             {
               ...addValue,
               rowId: customAlphabet(
                 "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-              6
-            )(),
-          }
-        ]
+                6
+              )(),
+            },
+          ]
+        }
+      } else {
+        newFilters.push({
+          id: addColId,
+          value: [
+            {
+              ...addValue,
+              rowId: customAlphabet(
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                6
+              )(),
+            },
+          ],
+        })
       }
-    }else{
-      newFilters.push({
-        id: addColId,
-        value: [
-          {
-            ...addValue,
-            rowId: customAlphabet(
-              "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-              6
-            )(),
-          }
-        ]
-      })
-    }
     }
     // console.log(newFilters, "filters newFilters");
-    setFilters(newFilters);
+    setFilters(newFilters)
   }
   // function updateFilter({
   //   rowId,
@@ -269,7 +291,7 @@ export function DataTableFilterList<TData>({
     inputId: string
   }) {
     const filterField = filterFields.find((f) => f.id === filter.id)
-    console.log(filterField, filter, "filters filterField");
+    console.log(filterField, filter, "filters filterField")
 
     if (!filterField) return null
 
@@ -300,7 +322,17 @@ export function DataTableFilterList<TData>({
               typeof filter.value === "string" ? filter.value : undefined
             }
             onChange={(event) =>
-              updateFilter("", "", "","", filter.id, filter.rowId as string, { value: event.target.value })
+              debouncedSetFilters(
+                "",
+                "",
+                "",
+                "",
+                filter.id,
+                filter.rowId as string,
+                {
+                  value: event.target.value,
+                }
+              )
             }
           />
         )
@@ -350,7 +382,15 @@ export function DataTableFilterList<TData>({
                       value={option.value}
                       selected={filter.value === option.value}
                       onSelect={(value) => {
-                        updateFilter("", "", "","", filter.id, filter.rowId as string, { value })
+                        updateFilter(
+                          "",
+                          "",
+                          "",
+                          "",
+                          filter.id,
+                          filter.rowId as string,
+                          { value }
+                        )
                         setTimeout(() => {
                           document.getElementById(inputId)?.click()
                         }, 0)
@@ -456,7 +496,15 @@ export function DataTableFilterList<TData>({
                         const newValue = currentValue.includes(value)
                           ? currentValue.filter((v) => v !== value)
                           : [...currentValue, value]
-                        updateFilter("", "", "","", filter.id, filter.rowId as string, { value: newValue })
+                        debouncedSetFilters(
+                          "",
+                          "",
+                          "",
+                          "",
+                          filter.id,
+                          filter.rowId as string,
+                          { value: newValue }
+                        )
                       }}
                     >
                       {option.icon && (
@@ -535,13 +583,22 @@ export function DataTableFilterList<TData>({
                         }
                   }
                   onSelect={(date) => {
-                    updateFilter("", "", "","", filter.id, filter.rowId as string, { value: date
-                      ? [
-                          date.from?.toISOString() ?? "",
-                          date.to?.toISOString() ?? "",
-                        ]
-                      : []})
-
+                    updateFilter(
+                      "",
+                      "",
+                      "",
+                      "",
+                      filter.id,
+                      filter.rowId as string,
+                      {
+                        value: date
+                          ? [
+                              date.from?.toISOString() ?? "",
+                              date.to?.toISOString() ?? "",
+                            ]
+                          : [],
+                      }
+                    )
                   }}
                   initialFocus
                   numberOfMonths={1}
@@ -553,7 +610,15 @@ export function DataTableFilterList<TData>({
                   aria-label={`Select ${filterField.label} date`}
                   selected={dateValue[0] ? new Date(dateValue[0]) : undefined}
                   onSelect={(date) => {
-                    updateFilter("", "", "","", filter.id, filter.rowId as string, { value: date?.toISOString() ?? "" })
+                    updateFilter(
+                      "",
+                      "",
+                      "",
+                      "",
+                      filter.id,
+                      filter.rowId as string,
+                      { value: date?.toISOString() ?? "" }
+                    )
 
                     setTimeout(() => {
                       document.getElementById(inputId)?.click()
@@ -572,7 +637,9 @@ export function DataTableFilterList<TData>({
           <Select
             value={filter.value}
             onValueChange={(value) =>
-              updateFilter("", "", "","", filter.id, filter.rowId as string, { value })
+              updateFilter("", "", "", "", filter.id, filter.rowId as string, {
+                value,
+              })
             }
           >
             <SelectTrigger
@@ -594,25 +661,28 @@ export function DataTableFilterList<TData>({
         return null
     }
   }
-  const destructuredFilters: Array<{ id: string } & Record<string, unknown>> = [];
-  const filterMap = new Map<string, string>();
+  const destructuredFilters: Array<{ id: string } & Record<string, unknown>> =
+    []
+  const filterMap = new Map<string, ColumnType>()
   filterFields.forEach((field) => {
-    filterMap.set(field.id, field.type);
-  });
-  filters.forEach((item: ColumnFilter) => {
-    const tempId = item.id;
+    filterMap.set(field.id, field.type)
+  })
+  filters?.forEach((item: ColumnFilter) => {
+    const tempId = item.id
     if (Array.isArray(item.value)) {
       item.value.forEach((val: Record<string, unknown>) => {
         destructuredFilters.push({
           id: tempId,
           type: filterMap.get(tempId),
-          ...val
+          ...val,
         })
       })
     }
   })
-  console.log(destructuredFilters, "filters destructuredFilters");
-
+  console.log(
+    destructuredFilters,
+    "FILTER LIST RENDERING filters destructuredFilters"
+  )
   return (
     <Sortable
       value={destructuredFilters.map((item) => ({ id: item.rowId }))}
@@ -680,7 +750,11 @@ export function DataTableFilterList<TData>({
               const inputId = `${filterId}-input`
 
               return (
-                <SortableItem key={filter.rowId as string} value={filter.rowId as string} asChild>
+                <SortableItem
+                  key={filter.rowId as string}
+                  value={filter.rowId as string}
+                  asChild
+                >
                   <div className="flex items-center gap-2">
                     <div className="min-w-[4.5rem] text-center">
                       {index === 0 ? (
@@ -764,7 +838,29 @@ export function DataTableFilterList<TData>({
 
                                     if (!filterField) return
 
-                                    updateFilter(filter.id, filter.rowId as string, value,  { rowId: filter.rowId, operator: filter.operator, value: filter.value}, "", "", "");
+                                    updateFilter(
+                                      filter.id,
+                                      filter.rowId as string,
+                                      value,
+                                      {
+                                        rowId: filter.rowId,
+                                        operator:
+                                          filterMap.get(value) === filter.type // TODO: if current operator in new filter type: NP else use getDefaultFilterOperator
+                                            ? filter.operator
+                                            : getDefaultFilterOperator(
+                                                filterMap.get(
+                                                  value
+                                                ) as ColumnType
+                                              ),
+                                        value:
+                                          filterMap.get(value) === filter.type
+                                            ? filter.value
+                                            : "",
+                                      },
+                                      "",
+                                      "",
+                                      ""
+                                    )
 
                                     document
                                       .getElementById(fieldTriggerId)
@@ -792,7 +888,15 @@ export function DataTableFilterList<TData>({
                     <Select
                       value={filter.operator as string}
                       onValueChange={(value: FilterOperator) =>
-                        updateFilter("", "", "", "", filter.id, filter.rowId as string, {  operator: value, value: filter.value})
+                        updateFilter(
+                          "",
+                          "",
+                          "",
+                          "",
+                          filter.id,
+                          filter.rowId as string,
+                          { operator: value, value: filter.value }
+                        )
                       }
                     >
                       <SelectTrigger
@@ -820,7 +924,17 @@ export function DataTableFilterList<TData>({
                       size="icon"
                       aria-label={`Remove filter ${index + 1}`}
                       className="size-8 shrink-0 rounded"
-                      onClick={() => updateFilter(filter.id, filter.rowId as string, "", "", "", "", "")}
+                      onClick={() =>
+                        updateFilter(
+                          filter.id,
+                          filter.rowId as string,
+                          "",
+                          "",
+                          "",
+                          "",
+                          ""
+                        )
+                      }
                     >
                       <Trash2 className="size-3.5" aria-hidden="true" />
                     </Button>
@@ -850,7 +964,7 @@ export function DataTableFilterList<TData>({
                 variant="outline"
                 className="rounded"
                 onClick={() => {
-                  void setFilters(null)
+                  void setFilters([])
                   void setJoinOperator("and")
                 }}
               >

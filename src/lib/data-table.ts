@@ -67,6 +67,12 @@ export function getDefaultFilterOperator(
   if (columnType === "text") {
     return "iLike"
   }
+  if (columnType === "multi-select") {
+    return "has"
+  }
+  if (columnType === "date") {
+    return "date-eq"
+  }
 
   return "eq"
 }
@@ -89,7 +95,7 @@ export function getFilterOperators(columnType: ColumnType) {
     text: dataTableConfig.textOperators,
     number: dataTableConfig.numericOperators,
     select: dataTableConfig.selectOperators,
-    "multi-select": dataTableConfig.selectOperators,
+    "multi-select": dataTableConfig.multiselectOperators,
     boolean: dataTableConfig.booleanOperators,
     date: dataTableConfig.dateOperators,
   }
