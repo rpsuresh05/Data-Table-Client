@@ -3,13 +3,15 @@
 import * as React from "react"
 import type { DataTableFilterField } from "@/types"
 import type { Table } from "@tanstack/react-table"
-import { X } from "lucide-react"
+import { SquareCheckBig, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter"
+import { DataTableFacetedFilter } from "@/components/data-table-client/data-table-faceted-filter"
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options"
+
+import { FilterValue } from "./data-table-advance-fn"
 
 interface DataTableToolbarProps<TData>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -37,6 +39,9 @@ interface DataTableToolbarProps<TData>
    * ]
    */
   filterFields?: DataTableFilterField<TData>[]
+  setColumnFilters: React.Dispatch<
+    React.SetStateAction<{ id: string; value: FilterValue[] }[]>
+  >
 }
 
 export function DataTableToolbar<TData>({
@@ -44,15 +49,16 @@ export function DataTableToolbar<TData>({
   filterFields = [],
   children,
   className,
+  setColumnFilters,
   ...props
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
-
   // Memoize computation of searchableColumns and filterableColumns
-  const { searchableColumns, filterableColumns } = React.useMemo(() => {
+  const { filterableColumns } = React.useMemo(() => {
     return {
-      searchableColumns: filterFields.filter((field) => !field.options),
-      filterableColumns: filterFields.filter((field) => field.options),
+      // searchableColumns: filterFields.filter((field) => !field.options),
+      filterableColumns: filterFields.filter(
+        (field) => field.options && field.quickFilter
+      ),
     }
   }, [filterFields])
 
@@ -64,8 +70,18 @@ export function DataTableToolbar<TData>({
       )}
       {...props}
     >
+      <Input
+        placeholder="Search Table..."
+        // value={
+        //   (table.getColumn(String(column.id))?.getFilterValue() as string) ?? ""
+        // }
+        // onChange={(event) =>
+        //   table.getColumn(String(column.id))?.setFilterValue(event.target.value)
+        // }
+        className="h-8 w-40 lg:w-64"
+      />
       <div className="flex flex-1 items-center gap-2">
-        {searchableColumns.length > 0 &&
+        {/* {searchableColumns.length > 0 &&
           searchableColumns.map(
             (column) =>
               table.getColumn(column.id ? String(column.id) : "") && (
@@ -85,7 +101,33 @@ export function DataTableToolbar<TData>({
                   className="h-8 w-40 lg:w-64"
                 />
               )
-          )}
+          )} */}
+      </div>
+      <div className="flex items-center gap-2">
+        {/* {table.getFilteredSelectedRowModel().rows.length > 0 && (
+          <Button
+            aria-label="Reset filters"
+            variant="ghost"
+            className="h-8 px-2 lg:px-3"
+            onClick={() =>
+              setColumnFilters([
+                {
+                  id: "select",
+                  value: [
+                    {
+                      rowId: "1234",
+                      operator: "row-select",
+                      value: "true",
+                    },
+                  ],
+                },
+              ])
+            }
+          >
+            Show Selected
+            <SquareCheckBig className="ml-1 size-4" aria-hidden="true" />
+          </Button>
+        )} */}
         {filterableColumns.length > 0 &&
           filterableColumns.map(
             (column) =>
@@ -95,24 +137,13 @@ export function DataTableToolbar<TData>({
                   column={table.getColumn(column.id ? String(column.id) : "")}
                   title={column.label}
                   options={column.options ?? []}
+                  setColumnFilters={setColumnFilters}
+                  table={table}
                 />
               )
           )}
-        {isFiltered && (
-          <Button
-            aria-label="Reset filters"
-            variant="ghost"
-            className="h-8 px-2 lg:px-3"
-            onClick={() => table.resetColumnFilters()}
-          >
-            Reset
-            <X className="ml-2 size-4" aria-hidden="true" />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
+
         {children}
-        <DataTableViewOptions table={table} />
       </div>
     </div>
   )

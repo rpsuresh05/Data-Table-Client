@@ -1,6 +1,7 @@
-import type { Option } from "@/types"
-import type { Column } from "@tanstack/react-table"
+import type { DataTableAdvancedFilterField, Filter, Option } from "@/types"
+import type { Column, Table } from "@tanstack/react-table"
 import { Check, PlusCircle } from "lucide-react"
+import { customAlphabet } from "nanoid"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -21,22 +22,39 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 
+import { FilterValue } from "./data-table-advance-fn"
+import { calcUpdateFilter, ColumnFilter } from "./data-table-filter-list"
+
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>
   title?: string
   options: Option[]
+  setColumnFilters: React.Dispatch<
+    React.SetStateAction<{ id: string; value: FilterValue[] }[]>
+  >
+  table: Table<TData>
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
   options,
+  setColumnFilters,
+  table,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const unknownValue = column?.getFilterValue()
+
+  const hasValue:
+    | { rowId: string; operator: string; value: string }
+    | undefined = (
+    unknownValue as Array<{ rowId: string; operator: string; value: string }>
+  )?.find((unknownVal: { operator: string }) => unknownVal.operator === "has")
+
   const selectedValues = new Set(
-    Array.isArray(unknownValue) ? unknownValue : []
+    Array.isArray(hasValue?.value) ? hasValue?.value : []
   )
 
+  console.log(unknownValue, "faceted filter..", selectedValues, column.id)
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -97,8 +115,29 @@ export function DataTableFacetedFilter<TData, TValue>({
                         selectedValues.add(option.value)
                       }
                       const filterValues = Array.from(selectedValues)
-                      column?.setFilterValue(
-                        filterValues.length ? filterValues : undefined
+                      // column?.setFilterValue(
+                      //   filterValues.length ? filterValues : undefined
+                      // )
+                      setColumnFilters(
+                        calcUpdateFilter(
+                          table.getState().columnFilters.slice(),
+                          "",
+                          "",
+                          !hasValue && column ? column?.id : "",
+                          !hasValue
+                            ? {
+                                value: filterValues,
+                                operator: "has",
+                                rowId: customAlphabet(
+                                  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                                  6
+                                )(),
+                              }
+                            : "",
+                          hasValue && column ? column?.id : "",
+                          hasValue ? hasValue.rowId : "",
+                          hasValue ? { value: filterValues } : ""
+                        )
                       )
                     }}
                   >
@@ -133,7 +172,20 @@ export function DataTableFacetedFilter<TData, TValue>({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
+                    onSelect={() =>
+                      setColumnFilters(
+                        calcUpdateFilter(
+                          table.getState().columnFilters.slice(),
+                          column ? column?.id : "",
+                          hasValue ? hasValue.rowId : "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          ""
+                        )
+                      )
+                    }
                     className="justify-center text-center"
                   >
                     Clear filters

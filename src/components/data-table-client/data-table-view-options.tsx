@@ -90,4 +90,4 @@ function DataTableViewOptionsUnmemoized<TData>({
   )
 }
 
-export const DataTableViewOptions = React.memo(DataTableViewOptionsUnmemoized)
+export const DataTableViewOptions = DataTableViewOptionsUnmemoized

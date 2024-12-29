@@ -74,9 +74,9 @@ export function DataTableSortList<TData>({
   //     })
   // )
 
-  const [_, setSorting] = React.useState(table.getState().sorting);
-  console.log("sorting", table.getState().sorting);
-  let sorting = table.getState().sorting;
+  const [_, setSorting] = React.useState(table.getState().sorting)
+  // console.log("sorting", table.getState().sorting);
+  let sorting = table.getState().sorting
   const uniqueSorting = React.useMemo(
     () =>
       sorting.filter(
@@ -101,18 +101,17 @@ export function DataTableSortList<TData>({
           selected: false,
           toggleSorting: column.toggleSorting,
           clearSorting: column.clearSorting,
-        }))
-        ,
+        })),
     [sorting, table]
   )
-  console.log("sorting sortableColumns", sortableColumns);
+  // console.log("sorting sortableColumns", sortableColumns);
   function addSort() {
     const firstAvailableColumn = sortableColumns.find(
       (column) => !sorting.some((s) => s.id === column.id)
     )
     if (!firstAvailableColumn) return
 
-    firstAvailableColumn.toggleSorting(false, true);
+    firstAvailableColumn.toggleSorting(false, true)
     // void setSorting([
     //   ...sorting,
     //   {
@@ -131,7 +130,9 @@ export function DataTableSortList<TData>({
     field: Partial<ExtendedColumnSort<TData>>
     debounced?: boolean
   }) {
-    table.setSorting(old => old.map(d => d.id === id ? { ...d, ...field } : d))
+    table.setSorting((old) =>
+      old.map((d) => (d.id === id ? { ...d, ...field } : d))
+    )
     // const updateFunction = debounced ? debouncedSetSorting : setSorting
 
     // updateFunction((prevSorting) => {
@@ -145,11 +146,12 @@ export function DataTableSortList<TData>({
   }
 
   function removeSort(id: string) {
-    table.setSorting(old => old.filter(d => d.id !== id))
+    table.setSorting((old) => old.filter((d) => d.id !== id))
     // void setSorting((prevSorting) =>
     //   prevSorting.filter((item) => item.id !== id)
     // )
   }
+  console.log("sorting advd rendering")
 
   return (
     <Sortable
@@ -263,7 +265,7 @@ export function DataTableSortList<TData>({
                                     value={column.id}
                                     onSelect={(value) => {
                                       const newFieldTriggerId = `${id}-sort-${value}-field-trigger`
-                                      console.log("sorting onValueChange 265", value);
+                                      // console.log("sorting onValueChange 265", value);
                                       updateSort({
                                         id: sort.id,
                                         field: {
@@ -299,13 +301,13 @@ export function DataTableSortList<TData>({
                       </Popover>
                       <Select
                         value={sort.desc ? "desc" : "asc"}
-                        onValueChange={(value: SortDirection) =>{
-                          console.log("sorting onValueChange 301", value);
+                        onValueChange={(value: SortDirection) => {
+                          // console.log("sorting onValueChange 301", value);
                           updateSort({
                             id: sort.id,
                             field: { desc: value === "desc" },
-                          })}
-                        }
+                          })
+                        }}
                       >
                         <SelectTrigger
                           aria-label="Select sort direction"
@@ -332,7 +334,9 @@ export function DataTableSortList<TData>({
                         size="icon"
                         aria-label={`Remove sort ${sort.id}`}
                         className="size-8 shrink-0 rounded"
-                        onClick={() =>{ removeSort(sort.id)}}
+                        onClick={() => {
+                          removeSort(sort.id)
+                        }}
                       >
                         <Trash2 className="size-3.5" aria-hidden="true" />
                       </Button>

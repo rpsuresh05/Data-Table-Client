@@ -79,6 +79,101 @@ interface ColumnFilter {
   value: Array<{ rowId: string; operator: string; value: string }>
 }
 
+export function calcUpdateFilter(
+  newFilters: Array<any>,
+  removeColId: string,
+  removeRowId: string,
+  addColId: string,
+  addValue: any,
+  updateColId: string,
+  updateRowId: string,
+  updateValue: any
+) {
+  // let newFilters = filters.slice()
+  if (removeColId) {
+    newFilters = newFilters.reduce<ColumnFilter[]>((res, curr) => {
+      if (curr.id === removeColId) {
+        let tempValue = (
+          curr.value as Array<{
+            rowId: string
+            operator: string
+            value: string
+          }>
+        ).slice()
+        tempValue = tempValue.filter((item) => {
+          if (item.rowId === removeRowId) {
+            return false
+          }
+          return true
+        })
+        if (tempValue.length > 0) {
+          res.push({
+            ...curr,
+            value: tempValue,
+          })
+        }
+      } else {
+        res.push(curr as ColumnFilter)
+      }
+      return res
+    }, [] as ColumnFilter[])
+  }
+  if (updateColId) {
+    newFilters = newFilters.map((item) => {
+      if (item.id === updateColId) {
+        let tempValue = (item.value as Array<{ rowId: string }>).slice()
+        tempValue = tempValue.map((item) => {
+          if (item.rowId === updateRowId) {
+            return {
+              ...item,
+              ...updateValue,
+            }
+          }
+          return item
+        })
+        return {
+          ...item,
+          value: tempValue,
+        }
+      }
+      return item
+    })
+  }
+  if (addColId) {
+    const existingIdx = newFilters.findIndex((item) => item.id === addColId)
+    if (existingIdx !== -1) {
+      const existingFilter = newFilters[existingIdx]
+      if (existingFilter) {
+        existingFilter.value = [
+          ...(existingFilter.value as Array<{ rowId: string }>),
+          {
+            ...addValue,
+            rowId: customAlphabet(
+              "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+              6
+            )(),
+          },
+        ]
+      }
+    } else {
+      newFilters.push({
+        id: addColId,
+        value: [
+          {
+            ...addValue,
+            rowId: customAlphabet(
+              "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+              6
+            )(),
+          },
+        ],
+      })
+    }
+  }
+  // console.log(newFilters, "filters newFilters");
+  return newFilters
+}
+
 export function DataTableFilterList<TData>({
   table,
   filterFields,
@@ -154,6 +249,7 @@ export function DataTableFilterList<TData>({
     //   // },
     // ])
   }
+
   function updateFilter(
     removeColId: string,
     removeRowId: string,
@@ -164,88 +260,20 @@ export function DataTableFilterList<TData>({
     updateValue: any
   ) {
     let newFilters = filters.slice()
-    if (removeColId) {
-      newFilters = newFilters.reduce<ColumnFilter[]>((res, curr) => {
-        if (curr.id === removeColId) {
-          let tempValue = (
-            curr.value as Array<{
-              rowId: string
-              operator: string
-              value: string
-            }>
-          ).slice()
-          tempValue = tempValue.filter((item) => {
-            if (item.rowId === removeRowId) {
-              return false
-            }
-            return true
-          })
-          if (tempValue.length > 0) {
-            res.push({
-              ...curr,
-              value: tempValue,
-            })
-          }
-        } else {
-          res.push(curr as ColumnFilter)
-        }
-        return res
-      }, [] as ColumnFilter[])
-    }
-    if (updateColId) {
-      newFilters = newFilters.map((item) => {
-        if (item.id === updateColId) {
-          let tempValue = (item.value as Array<{ rowId: string }>).slice()
-          tempValue = tempValue.map((item) => {
-            if (item.rowId === updateRowId) {
-              return {
-                ...item,
-                ...updateValue,
-              }
-            }
-            return item
-          })
-          return {
-            ...item,
-            value: tempValue,
-          }
-        }
-        return item
-      })
-    }
-    if (addColId) {
-      const existingIdx = newFilters.findIndex((item) => item.id === addColId)
-      if (existingIdx !== -1) {
-        const existingFilter = newFilters[existingIdx]
-        if (existingFilter) {
-          existingFilter.value = [
-            ...(existingFilter.value as Array<{ rowId: string }>),
-            {
-              ...addValue,
-              rowId: customAlphabet(
-                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-                6
-              )(),
-            },
-          ]
-        }
-      } else {
-        newFilters.push({
-          id: addColId,
-          value: [
-            {
-              ...addValue,
-              rowId: customAlphabet(
-                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-                6
-              )(),
-            },
-          ],
-        })
-      }
-    }
+
     // console.log(newFilters, "filters newFilters");
-    setFilters(newFilters)
+    setFilters(
+      calcUpdateFilter(
+        newFilters,
+        removeColId,
+        removeRowId,
+        addColId,
+        addValue,
+        updateColId,
+        updateRowId,
+        updateValue
+      )
+    )
   }
   // function updateFilter({
   //   rowId,

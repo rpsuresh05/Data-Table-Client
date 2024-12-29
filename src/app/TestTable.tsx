@@ -11,8 +11,10 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table"
 
+import { DataTableAbstractMemo } from "@/components/data-table-client/data-table-abstract"
 import { DataTableAdvancedToolbar } from "@/components/data-table-client/data-table-advanced-toolbar"
 import { DataTableColumnHeader } from "@/components/data-table-client/data-table-column-header"
+import { DataTableColumnOptions } from "@/components/data-table-client/data-table-column-options"
 import { DataTablePinList } from "@/components/data-table-client/data-table-pin-list"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
@@ -150,6 +152,49 @@ advancedFilter.autoRemove = (filterValues: FilterValue[]) => {
   return !filterValues?.length
 }
 
+const columnsNew = [
+  {
+    id: "id",
+    label: "ID",
+    type: "number",
+  },
+  {
+    id: "name",
+    label: "Name",
+    type: "text",
+  },
+  {
+    id: "email",
+    label: "Email",
+    type: "text",
+  },
+  {
+    id: "age",
+    label: "Age",
+    type: "number",
+  },
+  {
+    id: "birthDate",
+    label: "DOB",
+    type: "date",
+  },
+  {
+    id: "isActive",
+    label: "Active",
+    type: "boolean",
+  },
+  {
+    id: "education",
+    label: "Education",
+    type: "multi-select",
+    quickFilter: true,
+  },
+  {
+    id: "gender",
+    label: "Gender",
+    type: "select",
+  },
+]
 const columns: ColumnDef<TestData>[] = [
   {
     accessorKey: "id",
@@ -245,6 +290,7 @@ const advancedFilterFields = [
     id: "education",
     label: "Education",
     type: "multi-select",
+
     options: ["Bachelors", "Masters", "PHD", "12thGrade", "10thGrade"].map(
       (education) => ({
         label: education,
@@ -532,6 +578,7 @@ export function TestTable() {
       value: FilterValue[]
     }[]
   >([])
+  console.log("testTable..")
 
   // const handleFilterChange = React.useCallback(
   //   (updater: any) => {
@@ -575,53 +622,59 @@ export function TestTable() {
   // })
   // console.log("TABLE RENDERING")
 
-  const tableConfig = React.useMemo(
-    () => ({
-      state: {
-        columnFilters,
-      },
-      enableColumnFilters: true,
-      enableFilters: true,
-      data,
-      columns,
-      getCoreRowModel: getCoreRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-      filterFns: {
-        advanced: advancedFilter,
-      },
-    }),
-    [columnFilters] // Only depend on columnFilters
-  )
+  // const tableConfig = React.useMemo(
+  //   () => ({
+  //     state: {
+  //       columnFilters,
+  //     },
+  //     enableColumnFilters: true,
+  //     enableFilters: true,
+  //     data,
+  //     columns,
+  //     getCoreRowModel: getCoreRowModel(),
+  //     getPaginationRowModel: getPaginationRowModel(),
+  //     getSortedRowModel: getSortedRowModel(),
+  //     getFilteredRowModel: getFilteredRowModel(),
+  //     filterFns: {
+  //       advanced: advancedFilter,
+  //     },
+  //   }),
+  //   [columnFilters] // Only depend on columnFilters
+  // )
 
-  console.log("TABLE RENDERING b4")
-  const table = useReactTable(tableConfig)
-  console.log("TABLE RENDERING")
+  // console.log("TABLE RENDERING b4")
+  // const table = useReactTable(tableConfig)
+  // console.log("TABLE RENDERING")
 
-  React.useEffect(() => {
-    console.log("TABLE RENDERING in useEffect")
-  }, [table])
+  // React.useEffect(() => {
+  //   console.log("TABLE RENDERING in useEffect")
+  // }, [table])
 
   return (
-    <DataTable table={table}>
-      <DataTableAdvancedToolbar
-        table={table}
-        setColumnFilters={setColumnFilters}
-        filterFields={
-          advancedFilterFields as DataTableAdvancedFilterField<TestData>[]
-        }
-        shallow={false}
-      >
-        {/* <TasksTableToolbarActions table={table} /> */}
-        <DataTablePinList table={table} />
-      </DataTableAdvancedToolbar>
-
-      {/* <DataTableToolbar table={table} 
-        // filterFields={filterFields}
+    <>
+      {/* <DataTable table={table}>
+        <DataTableAdvancedToolbar
+          table={table}
+          setColumnFilters={setColumnFilters}
+          filterFields={
+            advancedFilterFields as DataTableAdvancedFilterField<TestData>[]
+          }
+          shallow={false}
         >
-          <TasksTableToolbarActions table={table} /> 
-        </DataTableToolbar> */}
-    </DataTable>
+          <TasksTableToolbarActions table={table} />
+        </DataTableAdvancedToolbar>
+
+         //<DataTableToolbar table={table} 
+        // filterFields={filterFields}
+        //>
+         // <TasksTableToolbarActions table={table} /> 
+        </DataTableToolbar> 
+      </DataTable> */}
+      <DataTableAbstractMemo
+        data={data}
+        columnsArray={columnsNew}
+        isSelectable={true}
+      />
+    </>
   )
 }

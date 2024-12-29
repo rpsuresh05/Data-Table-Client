@@ -27,18 +27,19 @@ export default async function IndexPage(props: IndexPageProps) {
 
   const validFilters = getValidFilters(search.filters)
 
-  const promises = Promise.all([
-    getTasks({
-      ...search,
-      filters: validFilters,
-    }),
-    getTaskStatusCounts(),
-    getTaskPriorityCounts(),
-  ])
+  // const promises = Promise.all([
+  //   getTasks({
+  //     ...search,
+  //     filters: validFilters,
+  //   }),
+  //   getTaskStatusCounts(),
+  //   getTaskPriorityCounts(),
+  // ])
 
   return (
     <Shell className="gap-2">
-      <FeatureFlagsProvider>
+      <TestTable />
+      {/* <FeatureFlagsProvider>
         <React.Suspense fallback={<Skeleton className="h-7 w-52" />}>
           <DateRangePicker
             triggerSize="sm"
@@ -58,10 +59,10 @@ export default async function IndexPage(props: IndexPageProps) {
             />
           }
         >
-          {/* <TasksTable promises={promises} /> */}
+           <TasksTable promises={promises} /> 
           <TestTable />
         </React.Suspense>
-      </FeatureFlagsProvider>
+      </FeatureFlagsProvider> */}
     </Shell>
   )
 }

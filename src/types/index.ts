@@ -35,6 +35,7 @@ export type FilterOperator = DataTableConfig["globalOperators"][number]
 export type JoinOperator = DataTableConfig["joinOperators"][number]["value"]
 
 export interface DataTableFilterField<TData> {
+  quickFilter: boolean
   id: StringKeyOf<TData>
   label: string
   placeholder?: string

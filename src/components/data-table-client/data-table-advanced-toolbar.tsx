@@ -3,11 +3,16 @@
 import * as React from "react"
 import type { DataTableAdvancedFilterField } from "@/types"
 import { type Table } from "@tanstack/react-table"
+import { Download, X } from "lucide-react"
 
+import { exportTableToCSV } from "@/lib/export"
 import { cn } from "@/lib/utils"
 import { DataTableFilterList } from "@/components/data-table-client/data-table-filter-list"
 import { DataTableSortList } from "@/components/data-table-client/data-table-sort-list"
 import { DataTableViewOptions } from "@/components/data-table-client/data-table-view-options"
+
+import { Button } from "../ui/button"
+import { DataTableColumnOptions } from "./data-table-column-options"
 
 interface DataTableAdvancedToolbarProps<TData>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -71,6 +76,8 @@ export function DataTableAdvancedToolbar<TData>({
   className,
   ...props
 }: DataTableAdvancedToolbarProps<TData>) {
+  const isFiltered = table.getState().columnFilters.length > 0
+
   return (
     <div
       className={cn(
@@ -94,8 +101,32 @@ export function DataTableAdvancedToolbar<TData>({
         />
       </div>
       <div className="flex items-center gap-2">
+        {isFiltered && (
+          <Button
+            aria-label="Reset filters"
+            variant="ghost"
+            className="h-8 px-2 lg:px-3"
+            onClick={() => setColumnFilters([])}
+          >
+            Reset
+            <X className="ml-2 size-4" aria-hidden="true" />
+          </Button>
+        )}
         {children}
-        <DataTableViewOptions table={table} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            exportTableToCSV(table, {
+              filename: "tasks",
+            })
+          }
+          className="gap-2"
+        >
+          <Download className="size-4" aria-hidden="true" />
+          Export
+        </Button>
+        <DataTableColumnOptions table={table} />
       </div>
     </div>
   )
